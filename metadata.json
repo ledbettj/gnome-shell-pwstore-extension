@@ -1,0 +1,6 @@
+{
+    "name": "Password Store",
+    "description": "Integrate with password-store password manager.",
+    "uuid": "pwstore@throttle.io",
+    "shell-version": ["3.32.0"]
+}
