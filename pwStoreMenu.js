@@ -7,10 +7,12 @@ const St        = imports.gi.St;
 
 var PwStoreMenu = GObject.registerClass(
   class PwStoreMenu extends PanelMenu.Button {
-    _init(launcher) {
+    _init(launcher, pwlist) {
       super._init(0.0, null, false);
 
       this._launcher = launcher;
+      this._list     = pwlist;
+
       this.popupMenu = new PopupMenu.PopupMenu(this.actor,
                                                St.Align.START,
                                                St.Side.TOP);
@@ -26,6 +28,13 @@ var PwStoreMenu = GObject.registerClass(
 
       box.add_child(icon);
       this.actor.add_actor(box);
+
+      this._redraw();
+      this._list.connect('entries-updated', this._redraw.bind(this));
+    }
+
+    _redraw() {
+
     }
 
     install() {

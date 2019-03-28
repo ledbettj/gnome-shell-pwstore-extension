@@ -3,18 +3,21 @@ const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 
+const PwList           = Me.imports.pwList.PwList;
 const PwSearchProvider = Me.imports.pwSearchProvider.PwSearchProvider;
 const PwStoreMenu      = Me.imports.pwStoreMenu.PwStoreMenu;
 const PassLauncher     = Me.imports.passLauncher.PassLauncher;
 
+let pwlist   = new PwList("/home/john/.password-store/");
+let launcher = new PassLauncher();
+
 let pwstore;
 let pwsearch;
-let launcher = new PassLauncher();
 
 
 function init() {
-  pwstore  = new PwStoreMenu(launcher);
-  pwsearch = new PwSearchProvider(launcher);
+  pwstore  = new PwStoreMenu(launcher, pwlist);
+  pwsearch = new PwSearchProvider(launcher, pwlist);
 }
 
 function enable() {
