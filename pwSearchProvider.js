@@ -54,13 +54,17 @@ var PwSearchProvider = class PwSearchProvider {
     let lcaseTerms = terms.map( (term) => term.toLowerCase() ),
         results    = [];
 
-    this.entries().forEach((entry, index) => {
+    let cancelled = this.entries().some((entry, index) => {
       if (lcaseTerms.find((term) => entry.search.includes(term))) {
         results.push(index);
       }
+
+      return cancellable && cancellable.is_cancelled();
     });
 
-    callback(results);
+    if (!cancelled) {
+      callback(results);
+    }
   }
 
   /**
