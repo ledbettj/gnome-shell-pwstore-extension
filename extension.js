@@ -1,5 +1,6 @@
 // -*- mode: js; js-indent-level: 2;-*-
 const ExtensionUtils = imports.misc.extensionUtils;
+const GLib = imports.gi.GLib;
 
 const Me = ExtensionUtils.getCurrentExtension();
 
@@ -9,7 +10,12 @@ const PwStoreMenu      = Me.imports.pwStoreMenu.PwStoreMenu;
 const PassLauncher     = Me.imports.passLauncher.PassLauncher;
 const PwSearch         = Me.imports.pwSearch;
 
-let pwlist   = new PwList("/home/john/.password-store/");
+const PASSWORD_STORE_DIR = GLib.build_pathv('/', [
+  GLib.get_home_dir(),
+  '.password-store'
+]);
+
+let pwlist   = new PwList(PASSWORD_STORE_DIR);
 let launcher = new PassLauncher();
 
 let pwstore;
