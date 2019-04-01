@@ -13,10 +13,12 @@ var PwSearchProvider = class PwSearchProvider {
    * @constructor
    * @param {PassLauncher} launcher
    * @param {PwList} passList
+   * @param {PwSearch} searcher
    */
-  constructor(launcher, passList) {
+  constructor(launcher, passList, searcher) {
     this._launcher = launcher;
     this._list     = passList;
+    this._searcher = searcher;
 
     this.isRemoteProvider = false;
     this.canLaunchSearch  = false;
@@ -55,19 +57,9 @@ var PwSearchProvider = class PwSearchProvider {
    *  cancelled (ie, user closed the search).
    */
   getInitialResultSet(terms, callback, cancellable) {
-    let lcaseTerms  = terms.map( (term) => term.toLowerCase() ),
-        searchTerms = [terms.join('/'), terms.join(' ')],
-        results     = [];
+    let results = this._searcher.search(terms, this.entries(), cancellable);
 
-    let cancelled = this.entries().some((entry, index) => {
-      if (searchTerms.find((term) => entry.search.includes(term))) {
-        results.push(index);
-      }
-
-      return cancellable && cancellable.is_cancelled();
-    });
-
-    if (!cancelled) {
+    if (!cancellable || !cancellable.is_cancelled()) {
       callback(results);
     }
   }
