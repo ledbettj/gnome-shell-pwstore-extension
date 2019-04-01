@@ -5,8 +5,16 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const St        = imports.gi.St;
 
+/**
+ * A Dropdown Menu in the gnome-shell status area.
+ */
 var PwStoreMenu = GObject.registerClass(
   class PwStoreMenu extends PanelMenu.Button {
+    /**
+     * @constructor
+     * @param {PassLauncher} launcher
+     * @param {PwList} pwlist
+     */
     _init(launcher, pwlist) {
       super._init(0.0, null, false);
 
@@ -34,13 +42,19 @@ var PwStoreMenu = GObject.registerClass(
     }
 
     _redraw() {
-
+      
     }
 
+    /**
+     * Add the icon to the status area.
+     */
     install() {
       Main.panel.addToStatusArea('pwstore', this);
     }
 
+    /**
+     * Remove this widget from the status area.
+     */
     uninstall() {
       this.destroy();
     }
