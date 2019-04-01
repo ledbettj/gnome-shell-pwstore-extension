@@ -45,17 +45,22 @@ var PwSearchProvider = class PwSearchProvider {
 
   /**
    * Called to retrieve an initial list of results when searching.
+   * Given search a set of search terms like "work,email" we will search the
+   * password store for items matching 'work/email' and 'work email'.
+   *
    * This is part of the SearchProvider API.
-   * @param {Array} terms
-   * @param {Function} callback
-   * @param {Gio.Cancellable} cancellable
+   * @param {Array} terms - list of strings the user typed into the shell search.
+   * @param {Function} callback - function to invoke with the search results.
+   * @param {Gio.Cancellable} cancellable - object to check if the search has been
+   *  cancelled (ie, user closed the search).
    */
   getInitialResultSet(terms, callback, cancellable) {
-    let lcaseTerms = terms.map( (term) => term.toLowerCase() ),
-        results    = [];
+    let lcaseTerms  = terms.map( (term) => term.toLowerCase() ),
+        searchTerms = [terms.join('/'), terms.join(' ')],
+        results     = [];
 
     let cancelled = this.entries().some((entry, index) => {
-      if (lcaseTerms.find((term) => entry.search.includes(term))) {
+      if (searchTerms.find((term) => entry.search.includes(term))) {
         results.push(index);
       }
 
