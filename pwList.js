@@ -21,7 +21,7 @@ var PwList = class PwList {
     this.emit('entries-updated');
 
     this._mon = this._passDir.monitor(Gio.FileMonitorFlags.NONE, null);
-    this._mon.connect('changed', this._onDirectoryEvent.bind(this));
+    this._monId = this._mon.connect('changed', this._onDirectoryEvent.bind(this));
   }
 
   /**
@@ -30,6 +30,11 @@ var PwList = class PwList {
    */
   entries() {
     return this._entries;
+  }
+
+  destroy() {
+    this._mon.disconnect(this._monId);
+    this._mon.cancel();
   }
 
   /**

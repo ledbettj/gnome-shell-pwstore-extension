@@ -15,19 +15,18 @@ const PASSWORD_STORE_DIR = GLib.build_pathv('/', [
   '.password-store'
 ]);
 
-let pwlist   = new PwList(PASSWORD_STORE_DIR);
-let launcher = new PassLauncher();
-
-let pwstore;
-let pwsearch;
-
+let pwlist, launcher, pwstore, pwsearch;
 
 function init() {
-  pwstore  = new PwStoreMenu(launcher, pwlist);
-  pwsearch = new PwSearchProvider(launcher, pwlist, new PwSearch.LiteralSearch());
 }
 
 function enable() {
+  pwlist   = new PwList(PASSWORD_STORE_DIR);
+  launcher = new PassLauncher();
+
+  pwstore  = new PwStoreMenu(launcher, pwlist);
+  pwsearch = new PwSearchProvider(launcher, pwlist, new PwSearch.LiteralSearch());
+
   pwstore.install();
   pwsearch.install();
 }
@@ -35,4 +34,5 @@ function enable() {
 function disable() {
   pwstore.uninstall();
   pwsearch.uninstall();
+  pwlist.destroy();
 }

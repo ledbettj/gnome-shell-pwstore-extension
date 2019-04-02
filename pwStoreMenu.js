@@ -38,11 +38,11 @@ var PwStoreMenu = GObject.registerClass(
       this.actor.add_actor(box);
 
       this._redraw();
-      this._list.connect('entries-updated', this._redraw.bind(this));
+      this._listSignal = this._list.connect('entries-updated', this._redraw.bind(this));
     }
 
     _redraw() {
-      
+
     }
 
     /**
@@ -56,6 +56,7 @@ var PwStoreMenu = GObject.registerClass(
      * Remove this widget from the status area.
      */
     uninstall() {
+      this._list.disconnect(this._listSignal);
       this.destroy();
     }
   });
