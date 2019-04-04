@@ -5,12 +5,11 @@ const JaroWinkler    = Me.imports.jaroWinkler.JaroWinkler;
 
 class Searcher {
   computeTerms(terms) {
-    let lcaseTerms  = terms.map( (term) => term.toLowerCase() ),
-        searchTerms = [terms.join('/'), terms.join(' ')];
+    let lcaseTerms  = terms.map((term) => term.toLowerCase()),
+        searchTerms = [lcaseTerms[0]];
 
-    /* don't do extra work if the terms are the same. */
-    if (searchTerms[0] == searchTerms[1]) {
-      searchTerms.shift();
+    if (lcaseTerms.length > 1) {
+      searchTerms = [lcaseTerms.join(' '), lcaseTerms.join('/')];
     }
 
     return searchTerms;
