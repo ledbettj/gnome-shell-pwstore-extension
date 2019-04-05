@@ -28,7 +28,7 @@ var PwSearchProvider = class PwSearchProvider {
    * @return {Array} list of entries in the Password Store.
    */
   entries() {
-    return this._list.entries();
+    return this._list.list();
   }
 
   /**
@@ -120,6 +120,6 @@ var PwSearchProvider = class PwSearchProvider {
    */
   activateResult(id, terms) {
     let entry = this.entries()[id];
-    this._launcher.launch(entry.relative);
+    this._launcher.launch(entry.fullPath);
   }
 };

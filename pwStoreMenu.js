@@ -37,12 +37,48 @@ var PwStoreMenu = GObject.registerClass(
       box.add_child(icon);
       this.actor.add_actor(box);
 
+      this.refresh();
+      this._listSignal = this._list.connect('entries-updated', this.refresh.bind(this));
+    }
+
+    refresh() {
+      this._folder = this._tree();
       this._redraw();
-      this._listSignal = this._list.connect('entries-updated', this._redraw.bind(this));
     }
 
     _redraw() {
+      this.menu.removeAll();
+      if (this._folder !== this._tree()) {
+        let up = new PopupMenu.PopupImageMenuItem('', 'go-up');
+        up.connect('activate', () => {
+          this._folder = this._folder.parent;
+          this._redraw();
+        });
+        this.menu.addMenuItem(up);
+      }
 
+      for (let name in this._folder.children) {
+        let entry = this._folder.children[name];
+        let item  = null;
+        if (entry.isDir) {
+          item = new PopupMenu.PopupImageMenuItem(entry.name, 'folder');
+          item.connect('activate', () => {
+            this._folder = entry;
+            this._redraw();
+          });
+        } else {
+          item = new PopupMenu.PopupImageMenuItem(entry.name, 'dialog-password');
+          item.connect('activate', () => {
+            this._launcher.launch(entry.fullPath);
+          });
+        }
+
+        this.menu.addMenuItem(item);
+      }
+    }
+
+    _tree() {
+      return this._list.tree();
     }
 
     /**

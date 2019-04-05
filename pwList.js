@@ -2,9 +2,20 @@
 const Gio     = imports.gi.Gio;
 const Signals = imports.signals;
 
+var PwEntry = class PwEntry {
+  constructor({ name, fullPath, isDir, parent = null }) {
+    this.parent   = parent;
+    this.name     = name.replace(/\.gpg$/i, '');
+    this.isDir    = isDir;
+    this.children = {};
+    this.fullPath = fullPath.replace(/\.gpg$/i, '');
+    this.search   = this.fullPath.toLowerCase();
+  }
+};
+
 /**
- * Loads and stores all the entries in the password store, and watches for
- * updates.
+ * Loads and stores all the entries in the password store
+ * and watches for updates.
  */
 var PwList = class PwList {
   /**
@@ -28,17 +39,23 @@ var PwList = class PwList {
    * has changed.
    */
   refresh() {
-    this._entries = [];
-    this._readEntries(this._passDir);
+    this._root = new PwEntry({name: '/', isDir: true, fullPath: ''});
+    this._list = [];
+
+    this._readTree(this._passDir, this._root);
     this.emit('entries-updated');
+  }
+
+  tree() {
+    return this._root;
   }
 
   /**
    * Grab the current list of Password Store entries.
    * @return {Array}
    */
-  entries() {
-    return this._entries;
+  list() {
+    return this._list;
   }
 
   destroy() {
@@ -71,36 +88,49 @@ var PwList = class PwList {
    * Read all the files stored under `dir` and add any .gpg files to the
    * entry list.
    * @param {Gio.File} dir
+   * @param {PwEntry} parent
    */
-  _readEntries(dir) {
+  _readTree(dir, parent) {
     let walker = dir.enumerate_children("standard::*", Gio.FileQueryInfoFlags.NONE, null);
     let info   = null;
 
     while((info = walker.next_file(null)) != null) {
       let child = dir.resolve_relative_path(info.get_name());
+      let isDir = info.get_file_type() == Gio.FileType.DIRECTORY;
+      let base  = child.get_basename().toLowerCase();
 
-      if (info.get_file_type() == Gio.FileType.DIRECTORY) {
-        this._readEntries(child);
-      } else if (this._isGpgFile(child)) {
-        this._addEntry(child);
+      /* do not read .git directory or non-gpg files */
+      if ((isDir && base === '.git') || (!isDir && !base.endsWith('.gpg')))
+        continue;
+
+      let ent = this._addEntry(parent, child, isDir);
+
+      if (isDir) {
+        this._readTree(child, ent);
+      } else {
+        this._list.push(ent);
       }
     }
   }
 
   /**
    * Add the given file to the entries list.
+   * @param {PwEntry}  parent
    * @param {Gio.File} file
+   * @param {boolean}  isDir
    */
-  _addEntry(file) {
-    let relative = this._passDir.get_relative_path(file).replace(/\.gpg$/i, '')
-    let entry = {
-      parent:    this._passDir.get_relative_path(file.get_parent()),
-      name:      file.get_basename().replace(/\.gpg$/i, ''),
-      relative:  relative,
-      search:    relative.toLowerCase()
-    };
+  _addEntry(parent, file, isDir) {
+    let relative = this._passDir.get_relative_path(file);
 
-    this._entries.push(entry);
+    let entry = new PwEntry({
+      name:     file.get_basename(),
+      fullPath: relative,
+      isDir:    isDir,
+      parent:   parent
+    });
+
+    parent.children[entry.name] = entry;
+    return entry;
   }
 
   /**
