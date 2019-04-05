@@ -16,12 +16,21 @@ var PwList = class PwList {
   constructor(path) {
     this._passDir = Gio.File.new_for_path(path);
 
-    this._entries = [];
-    this._readEntries(this._passDir);
-    this.emit('entries-updated');
+    this.refresh();
 
     this._mon = this._passDir.monitor(Gio.FileMonitorFlags.NONE, null);
     this._monId = this._mon.connect('changed', this._onDirectoryEvent.bind(this));
+  }
+
+  /**
+   * Re-read the password-store folder from disk.
+   * Runs on initialization as well as if the file watch indicates the folder
+   * has changed.
+   */
+  refresh() {
+    this._entries = [];
+    this._readEntries(this._passDir);
+    this.emit('entries-updated');
   }
 
   /**
@@ -51,8 +60,7 @@ var PwList = class PwList {
     case Gio.FileMonitorEvent.CREATED:
     case Gio.FileMonitorEvent.DELETED:
     case Gio.FileMonitorEvent.MOVED:
-      this._readEntries(this._passDir);
-      this.emit('entries-updated');
+      this.refresh();
       break;
     default:
       break;
