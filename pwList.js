@@ -2,6 +2,7 @@
 const Gio     = imports.gi.Gio;
 const Signals = imports.signals;
 
+/** Represents a single folder or password file in the store. */
 var PwEntry = class PwEntry {
   constructor({ name, fullPath, isDir, parent = null }) {
     this.parent   = parent;
@@ -21,8 +22,7 @@ var PwList = class PwList {
   /**
    * Insantiate a new PwList.
    * @constructor
-   * @param {string} path - path to the password-store repo, normally
-   *   ~/.password-store/
+   * @param {string} path - path to the password-store repo, normally ~/.password-store/
    */
   constructor(path) {
     this._passDir = Gio.File.new_for_path(path);
@@ -46,18 +46,27 @@ var PwList = class PwList {
     this.emit('entries-updated');
   }
 
+  /**
+   * The parsed list of directories and passwords.
+   * @return {PwEntry} the entry for the root password-store directory.
+   */
   tree() {
     return this._root;
   }
 
   /**
-   * Grab the current list of Password Store entries.
-   * @return {Array}
+   * The flattened list of only the passwords saved in the store.
+   * Useful for searching, less useful for traversing (use tree() instead).
+   * @return {Array} array of PwEntries for each password in the store.
    */
   list() {
     return this._list;
   }
 
+
+  /** Cleanup.
+   * Disconnect signals and cancel the file watcher.
+   */
   destroy() {
     this._mon.disconnect(this._monId);
     this._mon.cancel();
@@ -118,6 +127,7 @@ var PwList = class PwList {
    * @param {PwEntry}  parent
    * @param {Gio.File} file
    * @param {boolean}  isDir
+   * @return {PwEntry}
    */
   _addEntry(parent, file, isDir) {
     let relative = this._passDir.get_relative_path(file);
