@@ -50,28 +50,41 @@ var PwStoreMenu = GObject.registerClass(
       this.menu.removeAll();
       if (this._folder !== this._tree()) {
         let up = new PopupMenu.PopupImageMenuItem('', 'go-up');
-        up.connect('activate', () => {
+
+        up._activateId = up.connect('activate', () => {
           this._folder = this._folder.parent;
           this._redraw();
         });
+
+        up._destroyId = up.connect('destroy', (self) => {
+          self.disconnect(self._destroyId);
+          self.disconnect(self._activateid);
+        });
+
         this.menu.addMenuItem(up);
       }
 
       for (let name in this._folder.children) {
         let entry = this._folder.children[name];
         let item  = null;
+
         if (entry.isDir) {
           item = new PopupMenu.PopupImageMenuItem(entry.name, 'folder');
-          item.connect('activate', () => {
+          item._activateId = item.connect('activate', () => {
             this._folder = entry;
             this._redraw();
           });
         } else {
           item = new PopupMenu.PopupImageMenuItem(entry.name, 'dialog-password');
-          item.connect('activate', () => {
+          item._activateId = item.connect('activate', () => {
             this._launcher.launch(entry.fullPath);
           });
         }
+
+        item._destroyId = item.connect('destroy', (self) => {
+          self.disconnect(self._destroyId);
+          self.disconnect(self._activateid);
+        });
 
         this.menu.addMenuItem(item);
       }
@@ -89,7 +102,8 @@ var PwStoreMenu = GObject.registerClass(
     }
 
     /**
-     * Remove this widget from the status area.
+     * Remove this widget from the status area, disconnect signals,
+     * and destroy the items.
      */
     uninstall() {
       this._list.disconnect(this._listSignal);
