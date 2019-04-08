@@ -55,24 +55,24 @@ var PwStoreMenu = GObject.registerClass(
         _redraw() {
             this.menu.removeAll();
 
-            /* If we are not in the top level directory, include a "go-up" button
+            /* If we are not in the top level directory, include a back button
              * to take us back to the parent directory. */
             if (this._folder.parent) {
-                let up = new PopupMenu.PopupImageMenuItem('', 'go-up');
+                let back = new PopupMenu.PopupImageMenuItem(this._folder.fullPath, 'go-previous');
 
                 /* TODO: is this necessary? Are signals automagically disconnected
                  * on destroy? */
-                up._activateId = up.connect('activate', () => {
+                back.__activateId = back.connect('activate', () => {
                     this._folder = this._folder.parent;
                     this._redraw();
                 });
 
-                up._destroyId = up.connect('destroy', (self) => {
-                    self.disconnect(self._destroyId);
-                    self.disconnect(self._activateid);
+                back.__destroyId = back.connect('destroy', (self) => {
+                    self.disconnect(self.__destroyId);
+                    self.disconnect(self.__activateId);
                 });
 
-                this.menu.addMenuItem(up);
+                this.menu.addMenuItem(back);
             }
 
             /* Iterate over all child entries, creating either a new subfolder
@@ -83,22 +83,22 @@ var PwStoreMenu = GObject.registerClass(
 
                 if (entry.isDir) {
                     item = new PopupMenu.PopupImageMenuItem(entry.name, 'folder');
-                    item._activateId = item.connect('activate', () => {
+                    item.__activateId = item.connect('activate', () => {
                         this._folder = entry;
                         this._redraw();
                     });
                 } else {
                     item = new PopupMenu.PopupImageMenuItem(entry.name, 'dialog-password');
-                    item._activateId = item.connect('activate', () => {
+                    item.__activateId = item.connect('activate', () => {
                         this._launcher.launch(entry.fullPath);
                     });
                 }
 
                 /* TODO: is this necessary? Are signals automagically disconnected
                  * on destroy? */
-                item._destroyId = item.connect('destroy', (self) => {
-                    self.disconnect(self._destroyId);
-                    self.disconnect(self._activateid);
+                item.__destroyId = item.connect('destroy', (self) => {
+                    self.disconnect(self.__destroyId);
+                    self.disconnect(self.__activateId);
                 });
 
                 this.menu.addMenuItem(item);
