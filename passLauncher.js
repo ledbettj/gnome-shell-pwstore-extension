@@ -1,4 +1,4 @@
-// -*- mode: js; js-indent-level: 2;-*-
+// -*- mode: js; js-indent-level: 4;-*-
 const GLib = imports.gi.GLib;
 
 /**
