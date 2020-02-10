@@ -81,11 +81,27 @@ var PwSearchProvider = class PwSearchProvider {
      * @param {Function} callback
      */
     getResultMetas(results, callback) {
+        let nameCount = {};
+        // Identify any duplicate names in our result set, so we can disambiguate.
+        results.forEach((id) => {
+            let entry = this.entries()[id];
+
+            nameCount[entry.name] = nameCount[entry.name] || 0;
+            nameCount[entry.name] += 1;
+        });
+
         let metas = results.map((id) => {
             let entry = this.entries()[id];
+            let name = entry.name;
+
+            if (nameCount[name] > 1) {
+                let parts = entry.fullPath.split('/');
+                name = parts.slice(parts.length - 2, parts.length).join('/');
+            }
+
             return {
                 id:          id,
-                name:        entry.name,
+                name:        name,
                 description: `Password for ${entry.relative}`,
 
                 createIcon(size) {
