@@ -26,11 +26,10 @@ var PwList = class PwList {
      */
     constructor(path) {
         this._passDir = Gio.File.new_for_path(path);
+        this._mon = [];
+        this._monId = [];
 
-        this.refresh();
-
-        this._mon = this._passDir.monitor(Gio.FileMonitorFlags.NONE, null);
-        this._monId = this._mon.connect('changed', this._onDirectoryEvent.bind(this));
+        this.refresh(true);
     }
 
     /**
@@ -38,11 +37,11 @@ var PwList = class PwList {
      * Runs on initialization as well as if the file watch indicates the folder
      * has changed.
      */
-    refresh() {
+    refresh(doWatch) {
         this._root = new PwEntry({name: '/', isDir: true, fullPath: ''});
         this._list = [];
 
-        this._readTree(this._passDir, this._root);
+        this._readTree(this._passDir, this._root, doWatch);
         this.emit('entries-updated');
     }
 
@@ -68,8 +67,12 @@ var PwList = class PwList {
      * Disconnect signals and cancel the file watcher.
      */
     destroy() {
-        this._mon.disconnect(this._monId);
-        this._mon.cancel();
+        for(let i = 0; i < this._mon.length; ++i) {
+            this._mon[i].disconnect(this._monId[i]);
+            this._mon[i].cancel();
+        }
+        this._mon = [];
+        this._monId = [];
     }
 
     /**
@@ -98,8 +101,9 @@ var PwList = class PwList {
      * entry list.
      * @param {Gio.File} dir
      * @param {PwEntry} parent
+     * @param {doWatch} true to setup watches on all the directories.
      */
-    _readTree(dir, parent) {
+    _readTree(dir, parent, doWatch) {
         let walker = dir.enumerate_children("standard::*", Gio.FileQueryInfoFlags.NONE, null),
             info   = null;
 
@@ -112,6 +116,10 @@ var PwList = class PwList {
             if ((isDir && base === '.git') || (!isDir && !base.endsWith('.gpg')))
                 continue;
 
+            if (isDir && doWatch) {
+                this._doMonitor(child);
+            }
+
             let ent = this._addEntry(parent, child, isDir);
 
             if (isDir) {
@@ -120,6 +128,14 @@ var PwList = class PwList {
                 this._list.push(ent);
             }
         }
+    }
+
+    _doMonitor(file) {
+        let mon = file.monitor(Gio.FileMonitorFlags.NONE, null);
+        let monId = mon.connect('changed', this._onDirectoryEvent.bind(this));
+
+        this._mon.push(mon);
+        this._monId.push(monId);
     }
 
     /**
